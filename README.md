@@ -27,16 +27,6 @@ Given pump metadata (location, construction year, management, etc.), predict whe
 - Report metrics on validation and a confusion matrix.
 - Feature importance from tree-based models (e.g., XGBoost).
 
-##  Repository Structure
-
-Water-Pumps/
-├─ notebooks/
-│ └─ water_pumps_ml.ipynb
-├─ data/ # (optional) small sample or link to source
-├─ src/
-│ ├─ features.py # cleaning & feature engineering
-│ ├─ train.py # training script
-│ └─ evaluate.py # metrics & plots
-├─ requirements.txt
-└─ README.md
+##Author: Judith Martínez
+— Portfolio · Email
 
