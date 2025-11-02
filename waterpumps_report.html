@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport"content="width=device-width, initial-scale=1">
+<title>Waterpumps — Machine Learning Project (Geo + TopN + HGB)</title>
+<meta name="description" content="Waterpumps Report.">
+<style>
+:root{
+  --bg:#ffffff;
+  --panel:#f8fafc;
+  --text:#0f172a;
+  --muted:#475569;
+  --accent:#1e3a8a; /* azul oscuro */
+  --accent-2:#3b82f6; /* acento */
+  --radius:16px;
+  --shadow:0 10px 28px rgba(2,6,23,.08);
+  --border:#e5e7eb;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;line-height:1.7}
+
+/* Header & top nav */
+.header{padding:36px 20px;border-bottom:1px solid var(--border);
+  background:linear-gradient(180deg,#ffffff, #f7fbff)}
+.wrap{max-width:1200px;margin:0 auto;padding:0 20px}
+h1{margin:0 0 8px 0;font-size:2rem;color:var(--accent)}
+h2{font-size:1.25rem;color:var(--accent);margin:0 0 10px 0}
+p{margin:12px 0}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);margin:18px 0}
+.nav{position:sticky;top:0;background:#ffffffeb;border-bottom:1px solid var(--border);backdrop-filter:saturate(180%) blur(6px);z-index:20}
+.nav .wrap{display:flex;gap:16px;align-items:center;overflow:auto}
+.nav a{padding:12px 10px;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent;white-space:nowrap}
+.nav a.active{color:var(--accent);border-color:var(--accent-2)}
+
+/* Layout with sidebar TOC */
+.layout{display:grid;grid-template-columns:280px 1fr;gap:24px;align-items:start}
+@media (max-width: 1024px){.layout{grid-template-columns:1fr}}
+aside.toc{
+  position:sticky;top:76px;align-self:start;
+  background:#fff;border:1px solid var(--border);border-radius:14px;padding:14px;
+  box-shadow:var(--shadow);max-height:calc(100vh - 100px);overflow:auto
+}
+.toc h3{margin:0 0 8px 0;font-size:0.95rem;color:var(--accent)}
+.toc a{display:block;padding:6px 8px;border-radius:10px;text-decoration:none;color:var(--muted)}
+.toc a:hover{background:var(--panel)}
+.toc a.active{color:var(--accent);background:#eff6ff}
+.toc .lvl-2{padding-left:8px}
+.toc .lvl-3{padding-left:18px}
+.toc .lvl-4{padding-left:32px}
+
+/* Buttons row */
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
+button, .btn{
+  appearance:none;border:1px solid var(--border);background:#fff;color:var(--text);
+  border-radius:12px;padding:8px 12px;cursor:pointer;box-shadow:var(--shadow);
+  text-decoration:none;display:inline-flex;align-items:center;gap:8px
+}
+button:hover, .btn:hover{background:#f8fafc}
+
+/* Footer & misc */
+.footer{color:var(--muted);text-align:center;margin:28px 0}
+.anchor{
+  visibility:hidden;margin-left:6px;font-size:.9em;color:var(--accent-2);text-decoration:none
+}
+h2:hover .anchor, h3:hover .anchor, h4:hover .anchor{visibility:visible}
+
+/* Print-friendly for PDF */
+@media print{
+  .nav, .actions, aside.toc{display:none!important}
+  .card{box-shadow:none;border-color:#d1d5db}
+  a[href^="http"]:after{content:" (" attr(href) ")";font-size:0.85em;color:#374151}
+}
+
+/* --- injected by assistant: paragraph separation and TOC tweaks --- */
+.card p + p {
+  border-top: 1px solid var(--border);
+  margin-top: 14px;
+  padding-top: 14px;
+}
+.toc a {
+  display: block;
+  padding: 8px 10px;
+  border-radius: 10px;
+  text-decoration: none;
+  color: var(--muted);
+}
+.toc a:hover { background: #eef2ff; }
+.toc a.active { color: var(--accent); background: #eff6ff; }
+
+</style>
+</head>
+<body>
+
+<!-- injected header bar -->
+<style>
+  :root{
+    --hdr-bg: #0b1a3c;
+    --hdr-fg: #ffffff;
+  }
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: var(--hdr-bg);
+    color: var(--hdr-fg);
+    border-bottom: 1px solid rgba(255,255,255,.12);
+  }
+  .topbar .wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .topbar .title {
+    font-size: 1rem;
+    letter-spacing: .2px;
+    font-weight: 600;
+  }
+  .topbar .tags {
+    display:flex; gap:8px; flex-wrap:wrap;
+  }
+  .topbar .tag {
+    font-size: .8rem;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.2);
+  }
+  /* Typography polish */
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "ss01","cv05","cv10";
+  }
+  h1, h2, h3 { line-height: 1.25 }
+  h1 { font-size: 2rem; margin: 0 0 8px 0; }
+  h2 { font-size: 1.3rem; margin: 0 0 12px 0; }
+  p  { font-size: 1.02rem; }
+  .card { border-radius: 16px; }
+</style>
+<div class="topbar">
+  <div class="wrap">
+    <div class="title">Waterpumps — Machine Learning Project (Geo + TopN + HGB)</div>
+    <div class="tags">
+      <span class="tag">Supervised ML</span>
+      <span class="tag">Feature Engineering</span>
+      <span class="tag">Evaluation</span>
+    </div>
+  </div>
+</div>
+
+<header class="header">
+  <div class="wrap">
+    <h1>Waterpumps — Machine Learning Project (Geo + TopN + HGB)</h1>
+    <div class="muted">Technical report</div>
+  </div>
+</header>
+
+<nav class="nav">
+  <div class="wrap">
+    <a href="#Summary" class="active">Summary</a>
+    <a href="#contents">Contents</a>
+  </div>
+</nav>
+
+<main class="wrap layout">
+  <!-- TOC Sidebar (auto-filled by JS) -->
+  <aside class="toc" aria-label="Contents guide">
+    <h3>Contents</h3>
+    <nav id="toc-list"></nav>
+    <div class="actions">
+      <button id="btn-print" title="Exportar a PDF">🖨️ Exportar PDF</button>
+      <button id="btn-md" title="Descargar Markdown">⬇️ Markdown</button>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+
+    <section id="contents" class="card">
+      <p>MODULE :  Machine Learning
+      Waterpumps — Model Report (Geo + TopN Categ + HGB denso)
+      </p>
+      
+      
+
+      <!-- === DOCUMENT CONTENT === -->
+      <p><strong>Objective of the Project</strong><br>
+      The goal of this project is to predict the operational status of each water point in Tanzania:
+      • functional<br>
+      • non functional<br>
+      • functional needs repair<br><br>
+      The deliverable includes:<br>
+      1. A reproducible pipeline in Python (scikit-learn).<br>
+      2. A detailed explanation of the applied feature engineering.<br>
+      3. The submission file with predictions for the test set.</p>
+
+      <p><strong>2. Available Data</strong><br>
+      Three CSV files were used:<br>
+      • train_features.csv: predictor variables for the training set.<br>
+      • labels.csv: training labels (status_group).<br>
+      • test_features.csv: predictor variables for the test set (without labels).<br><br>
+      Restrictions: no external data or additional APIs were used, following the competition rules.</p>
+
+      <p><strong>3. Metric and Imbalance</strong><br>
+      The official metric is Macro-F1, which computes the unweighted average of the F1-score for each class.<br>
+      This is important because the dataset is imbalanced: the “non functional” class is the majority compared to “functional needs repair.”<br><br>
+      To mitigate this imbalance, the following were applied:<br>
+      • class_weight='balanced' in the classifier.</p>
+
+      <p>• Computation of sample_weight by class, based on its frequency in the training set.</p>
+
+      <p><strong>4. Feature Engineering</strong><br>
+      Transformations were designed to provide additional information to the model:<br><br>
+
+      • <em>Temporal</em><br>
+        o rec_year, rec_month, rec_dayofweek extracted from date_recorded.<br><br>
+
+      • <em>Well age</em><br>
+        o well_age = rec_year - construction_year, with corrections for null or erroneous values (construction_year=0).<br>
+        o Creation of discrete intervals (bins) to capture nonlinearities in age.<br><br>
+
+      • <em>Geographical</em><br>
+        o Flags such as gps_is_zero and height_is_zero to detect missing or invalid coordinates.<br>
+        o Coarse binning of latitude/longitude (lat_bin, lon_bin) to capture broad regional patterns.<br><br>
+
+      • <em>Geo clustering</em><br>
+        o KMeans applied on (longitude, latitude, gps_height) combining train and test.<br>
+        o Number of clusters: K ≈ 35.<br>
+        o New categorical variable _geo_cluster representing regional membership.<br><br>
+
+      • <em>Scaling transformations</em><br>
+        o log_population and log_amount_tsh to stabilize highly skewed distributions.<br>
+        o Ratio tsh_per_capita = amount_tsh / (population+1) to capture available water per person.</p>
+
+      <p><strong>5. Preprocessing</strong><br>
+      A ColumnTransformer was used to process different variable types separately:<br><br>
+
+      • <em>Numerical</em><br>
+        o Imputation with median.<br>
+        o Scaling with StandardScaler (dense).<br><br>
+
+      • <em>Low-cardinality categorical</em><br>
+        o Imputation with mode.<br>
+        o OneHotEncoder with dense representation.<br><br>
+
+      • <em>High-cardinality categorical</em><br>
+        o Application of a TopN reducer: keep the N most frequent categories (threshold: at least 30 occurrences).<br>
+        o The rest grouped into the category “other.”<br>
+        o OneHotEncoder (dense) applied afterward.<br><br>
+
+      • <em>Noise exclusion</em><br>
+        o Free-text columns with too much granularity were excluded: wpt_name, scheme_name, recorded_by, subvillage.</p>
+
+      <p><strong>6. Model</strong><br>
+      The selected classifier was <em>HistGradientBoostingClassifier (HGB)</em>, because it:<br>
+      • Captures nonlinear interactions between variables.<br>
+      • Natively supports dense scaled/one-hot encoded variables.<br>
+      • Implements early stopping to prevent overfitting.<br><br>
+      Key hyperparameters:<br>
+      • learning_rate=0.12<br>
+      • max_depth=12<br>
+      • max_iter=400<br>
+      • validation_fraction=0.1<br>
+      • n_iter_no_change=30<br>
+      • l2_regularization=1e-3</p>
+
+      <p><strong>7. Validation and Results</strong><br>
+      A holdout validation was performed (80% train / 20% stratified validation).<br>
+      • Reference metric: Macro-F1 ≈ 0.74–0.75 on the validation set.<br>
+      • The classification report shows that the model maintains a good balance between classes, although the minority class (“functional needs repair”) remains the most difficult.<br><br>
+      In the public leaderboard of the competition, the best achieved score was:<br>
+      0.7494 (Macro-F1)</p>
+
+      <p><strong>8. Experiment History</strong><br>
+      During development, 8 model variants were tested.<br>
+      The last five public scores were:</p>
+
+      <p><strong>9. Conclusions</strong><br>
+      • The combination of geographical and temporal feature engineering with a model robust to nonlinear interactions was key to improving performance.<br>
+      • The handling of categorical variables with TopNCategoryReducer allowed leveraging high-cardinality variables without overloading dimensionality.<br>
+      • The achieved score (0.7494 Macro-F1) ranks among the best attainable solutions without resorting to more complex models (ensembles or neural networks).<br><br>
+      This pipeline is reproducible, interpretable, and robust, providing a solid foundation for further improvements such as:<br>
+      • Ensembles of multiple classifiers (voting/blending).<br>
+      • Hyperparameter optimization via Optuna or BayesianSearch.<br>
+      • Inclusion of additional nonlinear interactions between numerical variables.</p>
+    </section>
+
+    <div class="footer">© <span id="y"></span> · Judith Martínez</div>
+  </div>
+</main>
+
+<!-- injected polished footer -->
+<style>
+  .polish-footer { color: var(--muted); text-align: center; margin: 28px 0; }
+</style>
+<div class="polish-footer">© <span id="yy"></span> · Judith Martínez · Technical Report</div>
+<script>document.getElementById('yy').textContent = new Date().getFullYear();</script>
+
+
+<!-- Markdown payload to download -->
+<script type="text/markdown" id="md-payload">
+# Waterpumps — Machine Learning Project (Geo + TopN + HGB)
+
+**Technical report**
+
+## Summary
+This document presents the Waterpumps project report in a lightweight web format.
+
+## 1. Objective of the Project
+Predict the operational status of each water point in Tanzania: functional, non functional, functional needs repair.
+Deliverables:
+1) reproducible pipeline in Python (scikit-learn),
+2) detailed feature engineering explanation,
+3) submission file for the test set.
+
+## 2. Available Data
+CSV files: train_features.csv, labels.csv (status_group), test_features.csv (no labels).
+No external data/APIs used (competition rules).
+
+## 3. Metric and Imbalance
+Official metric: Macro-F1 (unweighted mean over classes).
+Dataset is imbalanced (majority: non functional vs functional needs repair).
+Mitigation: class_weight='balanced' and class-based sample_weight.
+
+## 4. Feature Engineering
+Temporal (rec_year, rec_month, rec_dayofweek),
+Well age (well_age; bins),
+Geographical (gps_is_zero, height_is_zero; lat/lon binning),
+Geo clustering (KMeans on lon/lat/gps_height; K≈35; _geo_cluster),
+Scaling (log_population, log_amount_tsh, tsh_per_capita).
+
+## 5. Preprocessing
+ColumnTransformer:
+- Numerical: median imputation, StandardScaler.
+- Low-card categorical: mode imputation, OneHot (dense).
+- High-card categorical: TopN reducer (≥30), others→"other", then OneHot (dense).
+- Noise exclusion: wpt_name, scheme_name, recorded_by, subvillage.
+
+## 6. Model
+HistGradientBoostingClassifier with early stopping.
+Key params: lr=0.12, max_depth=12, max_iter=400, validation_fraction=0.1, n_iter_no_change=30, l2=1e-3.
+
+## 7. Validation and Results
+Holdout 80/20 stratified.
+Macro-F1 ≈ 0.74–0.75. Minority class hardest.
+Public leaderboard best: 0.7494 Macro-F1.
+
+## 8. Experiment History
+8 model variants tested. Last five public scores listed in original.
+
+## 9. Conclusions
+Geo + temporal FE + robust non-linear model were key.
+TopNCategoryReducer enabled using high-card categorical vars.
+Score competitive without ensembles/NNs.
+Next: ensembles, hyperparameter search (Optuna/Bayesian), extra non-linear interactions.
+</script>
+
+<script>
+/* Year in footer */
+document.getElementById('y').textContent = new Date().getFullYear();
+
+/* Helper: slugify for IDs */
+function slugify(str){
+  return String(str).toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9\s-]/g,'').trim().replace(/\s+/g,'-').replace(/-+/g,'-');
+}
+
+/* 1) Auto-anchors: convert <p><strong>Title</strong>...</p> into anchorable headings */
+function ensureAnchors(){
+  const main = document.querySelector('main');
+  // Headings we consider: h2..h4 and p>strong (subsection titles)
+  const candidates = [];
+  main.querySelectorAll('h2, h3, h4').forEach(h => candidates.push({el:h, lvl:2 + (h.tagName==='H3'?1:(h.tagName==='H4'?2:0))}));
+  // p>strong as h3-equivalents
+  document.querySelectorAll('#contents p > strong').forEach(strong => {
+    // Wrap the strong in an H3 (semantically nicer) but preserve following text
+    const p = strong.parentElement;
+    const title = strong.textContent.trim();
+    const h = document.createElement('h3');
+    h.textContent = title;
+    // move the rest of the paragraph back after heading
+    const rest = p.cloneNode(true);
+    // clean rest: remove the strong title from the copy
+    rest.innerHTML = rest.innerHTML.replace(/^\s*<strong>.*?<\/strong>\s*<br?>?/i,'');
+    p.replaceWith(h, rest);
+    candidates.push({el:h, lvl:3});
+  });
+
+  // Assign IDs and add anchor links
+  candidates.forEach(({el,lvl})=>{
+    if(!el.textContent.trim()) return;
+    const base = slugify(el.textContent);
+    let id = base, i=1;
+    while(document.getElementById(id)) { id = `${base}-${i++}`; }
+    el.id = el.id || id;
+
+    // little “#” anchor
+    const a = document.createElement('a');
+    a.className='anchor';
+    a.href = `#${el.id}`;
+    a.textContent = '§';
+    el.appendChild(a);
+    el.dataset.tocLvl = lvl;
+  });
+
+  return candidates;
+}
+
+/* 2) Build TOC sidebar */
+function buildTOC(items){
+  const nav = document.getElementById('toc-list');
+  const ul = document.createElement('div');
+  items.forEach(({el})=>{
+    const lvl = Number(el.dataset.tocLvl || (el.tagName==='H2'?2:3));
+    const link = document.createElement('a');
+    link.href = `#${el.id}`;
+    link.textContent = el.textContent.replace('§','').trim();
+    link.className = `lvl-${lvl}`;
+    ul.appendChild(link);
+  });
+  nav.innerHTML = '';
+  nav.appendChild(ul);
+}
+
+/* 3) Scroll spy (sidebar + top nav) */
+function setupScrollSpy(){
+  const topLinks=[...document.querySelectorAll('.nav a')];
+  const tocLinks=[...document.querySelectorAll('.toc a')];
+  const targets=[...document.querySelectorAll('h2,h3')];
+
+  const obs = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        const id = e.target.id;
+        topLinks.forEach(a=>a.classList.toggle('active', a.getAttribute('href')==='#'+id));
+        tocLinks.forEach(a=>a.classList.toggle('active', a.getAttribute('href')==='#'+id));
+      }
+    });
+  },{rootMargin:'-40% 0px -55% 0px', threshold:[0,1]});
+
+  targets.forEach(t=>obs.observe(t));
+}
+
+/* 4) Actions: print & download MD */
+document.getElementById('btn-print').addEventListener('click', ()=>window.print());
+document.getElementById('btn-md').addEventListener('click', ()=>{
+  const md = document.getElementById('md-payload').textContent.trim();
+  const blob = new Blob([md], {type:'text/markdown;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'waterpumps_report.md';
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+});
+
+/* 5) Init */
+const items = ensureAnchors();
+
+// --- injected by assistant: fix top-nav Summary to first heading ---
+(function(){
+  try {
+    var items = (typeof ensureAnchors === 'function') ? ensureAnchors() : [];
+    var topLinks = document.querySelectorAll('.nav a');
+    if (items && items.length && topLinks && topLinks[0]) {
+      topLinks[0].setAttribute('href', '#' + items[0].el.id);
+    }
+  } catch (e) { /* silent */ }
+})();
+
+
+buildTOC(items);
+setupScrollSpy();
+</script>
+<script>
+// injected: align Summary link to first detected section
+(function(){
+  try {
+    var items = (typeof ensureAnchors === 'function') ? ensureAnchors() : [];
+    var topLinks = document.querySelectorAll('.nav a');
+    if (items && items.length && topLinks && topLinks[0]) {
+      topLinks[0].setAttribute('href', '#' + items[0].el.id);
+    }
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>
