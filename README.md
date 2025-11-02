@@ -1,3 +1,4 @@
+[View Report](banner.png)](https://trolobubu.github.io/Water-Pumps/)
 <p align="center">
   <img src="banner.png" alt="Water Pump Failure Prediction — Machine Learning • scikit-learn • XGBoost" width="100%">
 </p>
