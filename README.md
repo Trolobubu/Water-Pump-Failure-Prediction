@@ -27,6 +27,9 @@ Given pump metadata (location, construction year, management, etc.), predict whe
 - Report metrics on validation and a confusion matrix.
 - Feature importance from tree-based models (e.g., XGBoost).
 
+## Technical Report 
+waterpumps_report.html
+
 ##Author: Judith Martínez
 — Portfolio · Email
 
