@@ -41,148 +41,151 @@ details summary{cursor:pointer;font-weight:600;color:var(--accent)}
 <header class="header">
   <div class="wrap">
     <h1>Waterpumps — Machine Learning Project (Geo + TopN + HGB)</h1>
-    <div class="muted">Memoria técnica (versión HTML dinámica, solo texto)</div>
+    <div class="muted">Technical report</div>
   </div>
 </header>
 <nav class="nav">
   <div class="wrap">
-    <a href="#resumen" class="active">Resumen</a>
-    <a href="#contenido">Contenido</a>
+    <a href="#Summary" class="active">Summary</a>
+    <a href="#contents">Contents</a>
   </div>
 </nav>
 <main class="wrap">
-<section id="resumen" class="card">
+<section id="Summary" class="card">
   <h2>Resumen</h2>
   <p>Este documento recoge el contenido textual de la memoria del proyecto Waterpumps en un formato web ligero. Se ha mantenido únicamente el texto extraído del PDF original, presentado en secciones legibles con un diseño blanco y acentos azules.</p>
 </section>
-<section id="contenido" class="card">
+<section id="contents" class="card">
   <h2>Contenido</h2>
 <p>1</p>
-<p>MÓDULO :  Machine Learning
-Proyecto Waterpumps — Informe de Modelo (Geo + TopN Categ + HGB denso)
-PROFE SORES : José Ángel Carballo – Luis Garmendia
-Alumna : Judith Castillo Martínez 48656517 -V</p>
+<p>MODULE :  Machine Learning
+Waterpumps — Model Report (Geo + TopN Categ + HGB denso)
+</p>
 <p>2</p>
-<p>CONTENIDOS
-2. Datos disponibles
-3. Métrica y desbalanceo
-4. Ingeniería de variables (Feature Engineering)
-5. Preprocesado
-6. Modelo
-7. Validación y resultados
-8. Histórico de experimentos
-9. Conclusiones</p>
+<p>CONTENTS
+1. Objective of the Project
+  
+2. Available Data
+
+3. Metric and Imbalance
+
+4. Feature Engineering
+
+5. Preprocessing
+
+6. Model
+
+7. Validation and Results
+
+8. Experiment History
+
+9. Conclusions</p>
 <p>3</p>
-<p>1. Objetivo del trabajo
-El objetivo del proyecto es predecir el estado operativo de cada punto de agua  en
-Tanzania:
-• functional
-• non functional
-• functional needs repair
-El entregable incluye:
-1. Un pipeline reproducible  en Python (scikit -learn).
-2. Una explicación detallada de la ingeniería de variables  aplicada.
-3. El archivo de submission  con predicciones para el conjunto de test.</p>
-<p>2. Datos disponibles
-Se han  utilizado  tres ficheros en formato CSV:
-• train_features.csv: variables predictoras para el conjunto de entrenamiento.
-• labels.csv: etiquetas de entrenamiento (status_group).
-• test_features.csv: variables predictoras del conjunto de test (sin etiquetas).
-Restricciones:  no se han empleado datos externos ni APIs adicionales, cumpliendo
-las reglas de la competición.</p>
-<p>3. Métrica y desbalanceo
-La métrica oficial es Macro -F1, que promedia de forma no ponderada  el F1 de cada
-clase.
-Esto es importante porque el dataset está desbalanceado: la clase non functional es
-mayoritaria frente a functional needs repair.
-Para mitigar este desbalanceo se aplicaron:
-• class_weight='balanced' en el clasificador.</p>
-<p>4</p>
-<p>• Cálculo de sample_weight por clase, según su frecuencia en el conjunto de
-entrenamiento.</p>
-<p>4. Ingeniería de variables (Feature Engineering)
-Se realizaron transformaciones diseñadas para aportar información adicional al
-modelo:
-• Temporal
-o rec_year, rec_month, rec_dayofweek extraídos de date_recorded.
-• Edad del pozo
-o well_age = rec_year - construction_year con correcciones para valores
-nulos o erróneos (construction_year=0).
-o Creación de intervalos discretos  (bins) para capturar no linealidades en
-la edad.
-• Geográficas
-o Flags como gps_is_zero y height_is_zero para detectar coordenadas
-ausentes o inválidas.
-o Binning grueso de latitud/longitud (lat_bin, lon_bin) para captar
-patrones regionales amplios.
-• Clustering geo
-o KMeans  sobre (longitude, latitude, gps_height) combinando train y
-test.
-o Número de clusters: K ≈ 35 .
-o Nueva variable categórica _geo_cluster que refleja pertenencia
-regional.
-• Transformaciones de escala
-o log_population y log_amount_tsh para estabilizar distribuciones muy
-sesgadas.
-o Ratio tsh_per_capita = amount_tsh / (population+1) para capturar
-densidad de agua disponible por persona.</p>
-<p>5</p>
-<p>5. Preprocesado
-Se aplicó un ColumnTransformer  para procesar los distintos tipos de variables de
-forma diferenciada:
-• Numéricas
-o Imputación con mediana.
-o Escalado con StandardScaler (denso).
-• Categóricas de baja cardinalidad
-o Imputación con la moda.
-o OneHotEncoder en representación densa .
-• Categóricas de alta cardinalidad
-o Aplicación de un reductor TopN : se mantienen las N categorías más
-frecuentes  (umbral: 30 ocurrencias mínimo).
-o El resto se agrupan en la categoría other.
-o Posteriormente se aplica OneHotEncoder denso.
-• Exclusión de ruido
-o Columnas de texto libre con demasiada granularidad fueron excluidas:
-wpt_name, scheme_name, recorded_by, subvillage.</p>
-<p>6. Modelo
-El clasificador seleccionado fue HistGradientBoostingClassifier (HGB) , debido a que:
-• Captura interacciones no lineales entre variables.
-• Soporta directamente variables densas con escalado/one -hot.
-• Implementa early stopping  para prevenir sobreajuste.
-Hiperparámetros clave:
-• learning_rate=0.12
-• max_depth=12
-• max_iter=400
-• validation_fraction=0.1
-• n_iter_no_change=30
-• l2_regularization=1e -3</p>
-<p>6</p>
-<p>7. Validación y resultados
-Se realizó una validación holdout  (80% train / 20% validación estratificada).
-• Métrica de referencia: Macro -F1 ≈ 0.74 –0.75 en el conjunto de validación.
-• Informe de clasificación muestra que el modelo mantiene un buen equilibrio
-entre clases, aunque la clase minoritaria (functional needs repair) sigue
-siendo la más difícil.
-En el tablero público de la competición , la mejor puntuación alcanzada fue:
- 0.7494 (Macro -F1)</p>
-<p>8. Histórico de experimentos
-Durante el desarrollo se probaron 8 variantes de modelos .
- Las últimas cinco puntuaciones públicas fueron:</p>
-<p>7</p>
-<p>9. Conclusiones
-• La combinación de ingeniería de variables geográficas y temporales  con un
-modelo robusto a interacciones no lineales  resultó clave para mejorar la
-puntuación.
-• El tratamiento de categóricas con TopNCategoryReducer  permitió aprovechar
-variables con alta cardinalidad sin sobrecargar la dimensionalidad.
-• La puntuación obtenida ( 0.7494 Macro -F1) se encuentra entre las mejores
-soluciones alcanzables sin recurrir a modelos más complejos (ensembles o
-redes neuronales).
-Este pipeline es reproducible, interpretable y robusto , y constituye una base sólida
-para extender a mejoras adicionales como:
-• Ensembles de múltiples clasificadores (voting/blending).
-• Optimización de hiperparámetros vía Optuna o BayesianSearch.
-• Inclusión de interacciones no lineales adicionales entre variables numéricas.</p>
+<p>1. <p><strong>Objective of the Project</strong><br>
+The goal of this project is to predict the operational status of each water point in Tanzania:
+• functional  
+• non functional  
+• functional needs repair  
+
+The deliverable includes:  
+1. A reproducible pipeline in Python (scikit-learn).  
+2. A detailed explanation of the applied feature engineering.  
+3. The submission file with predictions for the test set.</p>
+
+<p><strong>2. Available Data</strong><br>
+Three CSV files were used:  
+• train_features.csv: predictor variables for the training set.  
+• labels.csv: training labels (status_group).  
+• test_features.csv: predictor variables for the test set (without labels).  
+
+Restrictions: no external data or additional APIs were used, following the competition rules.</p>
+
+<p><strong>3. Metric and Imbalance</strong><br>
+The official metric is Macro-F1, which computes the unweighted average of the F1-score for each class.  
+This is important because the dataset is imbalanced: the “non functional” class is the majority compared to “functional needs repair.”  
+
+To mitigate this imbalance, the following were applied:  
+• class_weight='balanced' in the classifier.</p>
+
+<p>• Computation of sample_weight by class, based on its frequency in the training set.</p>
+
+<p><strong>4. Feature Engineering</strong><br>
+Transformations were designed to provide additional information to the model:  
+
+• <em>Temporal</em>  
+  o rec_year, rec_month, rec_dayofweek extracted from date_recorded.  
+
+• <em>Well age</em>  
+  o well_age = rec_year - construction_year, with corrections for null or erroneous values (construction_year=0).  
+  o Creation of discrete intervals (bins) to capture nonlinearities in age.  
+
+• <em>Geographical</em>  
+  o Flags such as gps_is_zero and height_is_zero to detect missing or invalid coordinates.  
+  o Coarse binning of latitude/longitude (lat_bin, lon_bin) to capture broad regional patterns.  
+
+• <em>Geo clustering</em>  
+  o KMeans applied on (longitude, latitude, gps_height) combining train and test.  
+  o Number of clusters: K ≈ 35.  
+  o New categorical variable _geo_cluster representing regional membership.  
+
+• <em>Scaling transformations</em>  
+  o log_population and log_amount_tsh to stabilize highly skewed distributions.  
+  o Ratio tsh_per_capita = amount_tsh / (population+1) to capture available water per person.</p>
+
+<p><strong>5. Preprocessing</strong><br>
+A ColumnTransformer was used to process different variable types separately:  
+
+• <em>Numerical</em>  
+  o Imputation with median.  
+  o Scaling with StandardScaler (dense).  
+
+• <em>Low-cardinality categorical</em>  
+  o Imputation with mode.  
+  o OneHotEncoder with dense representation.  
+
+• <em>High-cardinality categorical</em>  
+  o Application of a TopN reducer: keep the N most frequent categories (threshold: at least 30 occurrences).  
+  o The rest grouped into the category “other.”  
+  o OneHotEncoder (dense) applied afterward.  
+
+• <em>Noise exclusion</em>  
+  o Free-text columns with too much granularity were excluded: wpt_name, scheme_name, recorded_by, subvillage.</p>
+
+<p><strong>6. Model</strong><br>
+The selected classifier was <em>HistGradientBoostingClassifier (HGB)</em>, because it:  
+• Captures nonlinear interactions between variables.  
+• Natively supports dense scaled/one-hot encoded variables.  
+• Implements early stopping to prevent overfitting.  
+
+Key hyperparameters:  
+• learning_rate=0.12  
+• max_depth=12  
+• max_iter=400  
+• validation_fraction=0.1  
+• n_iter_no_change=30  
+• l2_regularization=1e-3</p>
+
+<p><strong>7. Validation and Results</strong><br>
+A holdout validation was performed (80% train / 20% stratified validation).  
+• Reference metric: Macro-F1 ≈ 0.74–0.75 on the validation set.  
+• The classification report shows that the model maintains a good balance between classes, although the minority class (“functional needs repair”) remains the most difficult.  
+
+In the public leaderboard of the competition, the best achieved score was:  
+0.7494 (Macro-F1)</p>
+
+<p><strong>8. Experiment History</strong><br>
+During development, 8 model variants were tested.  
+The last five public scores were:</p>
+
+<p><strong>9. Conclusions</strong><br>
+• The combination of geographical and temporal feature engineering with a model robust to nonlinear interactions was key to improving performance.  
+• The handling of categorical variables with TopNCategoryReducer allowed leveraging high-cardinality variables without overloading dimensionality.  
+• The achieved score (0.7494 Macro-F1) ranks among the best attainable solutions without resorting to more complex models (ensembles or neural networks).  
+
+This pipeline is reproducible, interpretable, and robust, providing a solid foundation for further improvements such as:  
+• Ensembles of multiple classifiers (voting/blending).  
+• Hyperparameter optimization via Optuna or BayesianSearch.  
+• Inclusion of additional nonlinear interactions between numerical variables.</p>
 </section>
 <div class="footer">© <span id="y"></span> · Judith Martínez</div>
 </main>
