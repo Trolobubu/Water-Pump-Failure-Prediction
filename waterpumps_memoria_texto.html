@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Waterpumps — Machine Learning Project (Geo + TopN + HGB)</title>
+<meta name="description" content="Memoria del proyecto Waterpumps en formato HTML dinámico.">
+<style>
+:root{
+  --bg:#ffffff;
+  --panel:#f8fafc;
+  --text:#0f172a;
+  --muted:#475569;
+  --accent:#1e3a8a; /* azul oscuro */
+  --accent-2:#3b82f6; /* acento */
+  --radius:16px;
+  --shadow:0 10px 28px rgba(2,6,23,.08);
+  --border:#e5e7eb;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;line-height:1.7}
+.header{
+  padding:36px 20px;border-bottom:1px solid var(--border);
+  background:linear-gradient(180deg,#ffffff, #f7fbff);
+}
+.wrap{max-width:1000px;margin:0 auto;padding:0 20px}
+h1{margin:0 0 8px 0;font-size:2rem;color:var(--accent)}
+h2{font-size:1.25rem;color:var(--accent);margin:0 0 10px 0}
+p{margin:12px 0}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);margin:18px 0}
+details{border:1px solid var(--border);border-radius:14px;padding:12px 16px;background:#fff}
+details summary{cursor:pointer;font-weight:600;color:var(--accent)}
+.nav{position:sticky;top:0;background:#ffffffeb;border-bottom:1px solid var(--border)}
+.nav .wrap{display:flex;gap:16px;align-items:center;overflow:auto}
+.nav a{padding:12px 10px;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent;white-space:nowrap}
+.nav a.active{color:var(--accent);border-color:var(--accent-2)}
+.footer{color:var(--muted);text-align:center;margin:28px 0}
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="wrap">
+    <h1>Waterpumps — Machine Learning Project (Geo + TopN + HGB)</h1>
+    <div class="muted">Memoria técnica (versión HTML dinámica, solo texto)</div>
+  </div>
+</header>
+<nav class="nav">
+  <div class="wrap">
+    <a href="#resumen" class="active">Resumen</a>
+    <a href="#contenido">Contenido</a>
+  </div>
+</nav>
+<main class="wrap">
+<section id="resumen" class="card">
+  <h2>Resumen</h2>
+  <p>Este documento recoge el contenido textual de la memoria del proyecto Waterpumps en un formato web ligero. Se ha mantenido únicamente el texto extraído del PDF original, presentado en secciones legibles con un diseño blanco y acentos azules.</p>
+</section>
+<section id="contenido" class="card">
+  <h2>Contenido</h2>
+<p>1</p>
+<p>MÓDULO :  Machine Learning
+Proyecto Waterpumps — Informe de Modelo (Geo + TopN Categ + HGB denso)
+PROFE SORES : José Ángel Carballo – Luis Garmendia
+Alumna : Judith Castillo Martínez 48656517 -V</p>
+<p>2</p>
+<p>CONTENIDOS
+2. Datos disponibles
+3. Métrica y desbalanceo
+4. Ingeniería de variables (Feature Engineering)
+5. Preprocesado
+6. Modelo
+7. Validación y resultados
+8. Histórico de experimentos
+9. Conclusiones</p>
+<p>3</p>
+<p>1. Objetivo del trabajo
+El objetivo del proyecto es predecir el estado operativo de cada punto de agua  en
+Tanzania:
+• functional
+• non functional
+• functional needs repair
+El entregable incluye:
+1. Un pipeline reproducible  en Python (scikit -learn).
+2. Una explicación detallada de la ingeniería de variables  aplicada.
+3. El archivo de submission  con predicciones para el conjunto de test.</p>
+<p>2. Datos disponibles
+Se han  utilizado  tres ficheros en formato CSV:
+• train_features.csv: variables predictoras para el conjunto de entrenamiento.
+• labels.csv: etiquetas de entrenamiento (status_group).
+• test_features.csv: variables predictoras del conjunto de test (sin etiquetas).
+Restricciones:  no se han empleado datos externos ni APIs adicionales, cumpliendo
+las reglas de la competición.</p>
+<p>3. Métrica y desbalanceo
+La métrica oficial es Macro -F1, que promedia de forma no ponderada  el F1 de cada
+clase.
+Esto es importante porque el dataset está desbalanceado: la clase non functional es
+mayoritaria frente a functional needs repair.
+Para mitigar este desbalanceo se aplicaron:
+• class_weight='balanced' en el clasificador.</p>
+<p>4</p>
+<p>• Cálculo de sample_weight por clase, según su frecuencia en el conjunto de
+entrenamiento.</p>
+<p>4. Ingeniería de variables (Feature Engineering)
+Se realizaron transformaciones diseñadas para aportar información adicional al
+modelo:
+• Temporal
+o rec_year, rec_month, rec_dayofweek extraídos de date_recorded.
+• Edad del pozo
+o well_age = rec_year - construction_year con correcciones para valores
+nulos o erróneos (construction_year=0).
+o Creación de intervalos discretos  (bins) para capturar no linealidades en
+la edad.
+• Geográficas
+o Flags como gps_is_zero y height_is_zero para detectar coordenadas
+ausentes o inválidas.
+o Binning grueso de latitud/longitud (lat_bin, lon_bin) para captar
+patrones regionales amplios.
+• Clustering geo
+o KMeans  sobre (longitude, latitude, gps_height) combinando train y
+test.
+o Número de clusters: K ≈ 35 .
+o Nueva variable categórica _geo_cluster que refleja pertenencia
+regional.
+• Transformaciones de escala
+o log_population y log_amount_tsh para estabilizar distribuciones muy
+sesgadas.
+o Ratio tsh_per_capita = amount_tsh / (population+1) para capturar
+densidad de agua disponible por persona.</p>
+<p>5</p>
+<p>5. Preprocesado
+Se aplicó un ColumnTransformer  para procesar los distintos tipos de variables de
+forma diferenciada:
+• Numéricas
+o Imputación con mediana.
+o Escalado con StandardScaler (denso).
+• Categóricas de baja cardinalidad
+o Imputación con la moda.
+o OneHotEncoder en representación densa .
+• Categóricas de alta cardinalidad
+o Aplicación de un reductor TopN : se mantienen las N categorías más
+frecuentes  (umbral: 30 ocurrencias mínimo).
+o El resto se agrupan en la categoría other.
+o Posteriormente se aplica OneHotEncoder denso.
+• Exclusión de ruido
+o Columnas de texto libre con demasiada granularidad fueron excluidas:
+wpt_name, scheme_name, recorded_by, subvillage.</p>
+<p>6. Modelo
+El clasificador seleccionado fue HistGradientBoostingClassifier (HGB) , debido a que:
+• Captura interacciones no lineales entre variables.
+• Soporta directamente variables densas con escalado/one -hot.
+• Implementa early stopping  para prevenir sobreajuste.
+Hiperparámetros clave:
+• learning_rate=0.12
+• max_depth=12
+• max_iter=400
+• validation_fraction=0.1
+• n_iter_no_change=30
+• l2_regularization=1e -3</p>
+<p>6</p>
+<p>7. Validación y resultados
+Se realizó una validación holdout  (80% train / 20% validación estratificada).
+• Métrica de referencia: Macro -F1 ≈ 0.74 –0.75 en el conjunto de validación.
+• Informe de clasificación muestra que el modelo mantiene un buen equilibrio
+entre clases, aunque la clase minoritaria (functional needs repair) sigue
+siendo la más difícil.
+En el tablero público de la competición , la mejor puntuación alcanzada fue:
+ 0.7494 (Macro -F1)</p>
+<p>8. Histórico de experimentos
+Durante el desarrollo se probaron 8 variantes de modelos .
+ Las últimas cinco puntuaciones públicas fueron:</p>
+<p>7</p>
+<p>9. Conclusiones
+• La combinación de ingeniería de variables geográficas y temporales  con un
+modelo robusto a interacciones no lineales  resultó clave para mejorar la
+puntuación.
+• El tratamiento de categóricas con TopNCategoryReducer  permitió aprovechar
+variables con alta cardinalidad sin sobrecargar la dimensionalidad.
+• La puntuación obtenida ( 0.7494 Macro -F1) se encuentra entre las mejores
+soluciones alcanzables sin recurrir a modelos más complejos (ensembles o
+redes neuronales).
+Este pipeline es reproducible, interpretable y robusto , y constituye una base sólida
+para extender a mejoras adicionales como:
+• Ensembles de múltiples clasificadores (voting/blending).
+• Optimización de hiperparámetros vía Optuna o BayesianSearch.
+• Inclusión de interacciones no lineales adicionales entre variables numéricas.</p>
+</section>
+<div class="footer">© <span id="y"></span> · Judith Martínez</div>
+</main>
+<script>
+document.getElementById('y').textContent = new Date().getFullYear();
+
+// marcar enlace activo al hacer scroll
+const links=[...document.querySelectorAll('.nav a')];
+const sections=[...document.querySelectorAll('main section')];
+const onScroll=()=>{
+  let cur=sections[0].id;
+  sections.forEach(s=>{const r=s.getBoundingClientRect(); if(r.top<120) cur=s.id;});
+  links.forEach(a=>a.classList.toggle('active', a.getAttribute('href')==='#'+cur));
+};
+document.addEventListener('scroll', onScroll);
+</script>
+</body></html>
